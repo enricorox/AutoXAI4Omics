@@ -11,6 +11,10 @@
 #SBATCH --partition allgroups
 #SBATCH --mem 20G
 
+set -e
+
+echo "### TRAINING ###"
 srun ./autoxai4omics.sh -c examples/50k_barley_SHAP.json -m train
 
+echo "### TESTING ###"
 srun ./autoxai4omics.sh -c examples/50k_barley_SHAP.json -m test
