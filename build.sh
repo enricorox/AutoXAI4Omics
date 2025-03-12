@@ -14,8 +14,11 @@
 # limitations under the License.
 
 
-while getopts "r" opt; do
+while getopts "ar" opt; do
   case ${opt} in
+    a)
+      use_apptainer="true"
+      ;;
     r)
       no_cache=--no-cache
       ;;
@@ -26,6 +29,10 @@ while getopts "r" opt; do
 done
 
 . ./common.sh &&
-  docker build ${no_cache} -t ${IMAGE_NAME}:${IMAGE_TAG} . &&
-  docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest &&
-  docker system prune -f
+docker build ${no_cache} -t ${IMAGE_NAME}:${IMAGE_TAG} . &&
+docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest &&
+docker system prune -f
+
+if [ "$use_apptainer" == "true" ]; then
+  apptainer build autoxai4omics.sif docker-daemon://${IMAGE_NAME}:${IMAGE_TAG}
+fi
