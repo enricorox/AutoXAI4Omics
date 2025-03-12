@@ -15,137 +15,248 @@
 
 set -x
 
-ROOT=''
-DETACH=''
-GPU=''
-CONFIG=''
-MODE=''
-VOL_MAPS="-v ${PWD}/configs:/configs -v ${PWD}/data:/data -v ${PWD}/experiments:/experiments"
+if [ ! -f autoxai4omics.sif ]; then  ### use docker ###
+  ROOT=''
+  DETACH=''
+  GPU=''
+  CONFIG=''
+  MODE=''
+  VOL_MAPS="-v ${PWD}/configs:/configs -v ${PWD}/data:/data -v ${PWD}/experiments:/experiments"
 
-echo "Getting flags"
-#get variables from input
-while getopts 'm:c:rgdn' OPTION; do
-    case "$OPTION" in
-        m) 
-            case "${OPTARG}" in
-                "train")
-                    MODE=mode_train_models.py
-                    ;;
-                "test")
-                    MODE=mode_testing_holdout.py
-                    ;;
-                "predict")
-                    MODE=mode_predict.py
-                    ;;
-                "plotting")
-                    MODE=mode_plotting.py
-                    ;;
-                "feature")
-                    MODE=mode_feature_selection.py
-                    ;;
-                "bash")
-                    MODE=bash
-                    ;;
-                ?)
-                    echo "Unrecognised mode: ${OPTARG}. Valid modes: train, test, predict, plotting, bash"
-                    exit 1
-                    ;;
-            esac
+  echo "Getting flags"
+  #get variables from input
+  while getopts 'm:c:rgdn' OPTION; do
+      case "$OPTION" in
+          m)
+              case "${OPTARG}" in
+                  "train")
+                      MODE=mode_train_models.py
+                      ;;
+                  "test")
+                      MODE=mode_testing_holdout.py
+                      ;;
+                  "predict")
+                      MODE=mode_predict.py
+                      ;;
+                  "plotting")
+                      MODE=mode_plotting.py
+                      ;;
+                  "feature")
+                      MODE=mode_feature_selection.py
+                      ;;
+                  "bash")
+                      MODE=bash
+                      ;;
+                  ?)
+                      echo "Unrecognised mode: ${OPTARG}. Valid modes: train, test, predict, plotting, bash"
+                      exit 1
+                      ;;
+              esac
+              ;;
+          c)
+              echo "Registering config"
+              CONFIG="configs/${OPTARG}"
+              if [ ! -d "$CONFIG" ] && [ ! -f "$CONFIG" ]
+              then
+                  echo "config provided in -c flag (${CONFIG#configs/}) is not a valid directory or file"
+                  exit 1
+              fi
+              ;;
+          r)
+              echo "Setting root for bash"
+              ROOT='-u root'
+              ;;
+          g)
+              echo "Setting gpus access"
+              GPU='--gpus all -ti'
+              ;;
+          d)
+              echo "Registering container detachment"
+              DETACH='-d'
+              ;;
+          n)
+              N_BATCHES=${OPTARG}
+              ;;
+          ?)
+            echo "script usage: $(basename \$0) [-m] [-c] [-p] [-r] [-g] [-d]" >&2
+            exit 1
             ;;
-        c)
-            echo "Registering config"
-            CONFIG="configs/${OPTARG}"
-            if [ ! -d "$CONFIG" ] && [ ! -f "$CONFIG" ]
-            then
-                echo "config provided in -c flag (${CONFIG#configs/}) is not a valid directory or file"
-                exit 1
-            fi
+      esac
+  done
+
+  if [[ $MODE == "" ]]
+  then
+      echo "Please specify a mode using the flag -m, valid modes: train, test, predict, plotting, bash"
+      exit 1
+  fi
+
+  if [[ $CONFIG == "" && $MODE != "bash" ]]
+  then
+      echo "Config file not provided. please provide a file from the config folder"
+      exit 1
+  fi
+
+  . ./common.sh
+
+  IMAGE_ID=$(docker images -q $IMAGE_FULL)
+
+  if [[ -z $IMAGE_ID ]]
+  then
+      echo "Image not built, please build by running './build.sh' "
+      exit 1
+  fi
+
+  if [ $MODE != "bash" ]
+  then
+      if [ -d "$CONFIG" ]
+      then
+          echo "Entering batch mode..."
+          N_BATCHES=${N_BATCHES:-5}
+
+          for FILE in $(find $CONFIG -name "*.json" | sort )
+          do
+              (
+                  echo "Runing config file: $FILE"
+                  # ((i=i%N_BATCHES)); ((i++==0)) && wait
+                  docker run \
+                    --rm \
+                    $DETACH \
+                    $GPU \
+                    $VOL_MAPS \
+                    $IMAGE_FULL \
+                    python $MODE -c /"$FILE"
+              ) &
+              if [[ $(jobs -r -p | wc -l) -ge $N_BATCHES ]]; then
+                  # now there are $N jobs already running, so wait here for any job
+                  # to be finished so there is a place to start next one.
+                  wait -n
+              fi
+          done
+          wait
+      else
+          docker run \
+            --rm \
+            $DETACH \
+            $GPU \
+            $VOL_MAPS \
+            $IMAGE_FULL \
+            python $MODE -c /"$CONFIG"
+      fi
+  else
+      docker run \
+        --rm \
+        -ti \
+        $ROOT \
+        $VOL_MAPS \
+        $IMAGE_FULL \
+        bash
+  fi
+else ### use apptainer ###
+  ROOT=''
+  DETACH=''
+  GPU=''
+  CONFIG=''
+  MODE=''
+  VOL_MAPS="--bind ${PWD}/configs:/configs,${PWD}/data:/data,${PWD}/experiments:/experiments"
+
+  echo "Getting flags"
+  #get variables from input
+  while getopts 'm:c:rgdn' OPTION; do
+      case "$OPTION" in
+          m)
+              case "${OPTARG}" in
+                  "train")
+                      MODE=mode_train_models.py
+                      ;;
+                  "test")
+                      MODE=mode_testing_holdout.py
+                      ;;
+                  "predict")
+                      MODE=mode_predict.py
+                      ;;
+                  "plotting")
+                      MODE=mode_plotting.py
+                      ;;
+                  "feature")
+                      MODE=mode_feature_selection.py
+                      ;;
+                  "bash")
+                      MODE=bash
+                      ;;
+                  ?)
+                      echo "Unrecognised mode: ${OPTARG}. Valid modes: train, test, predict, plotting, bash"
+                      exit 1
+                      ;;
+              esac
+              ;;
+          c)
+              echo "Registering config"
+              CONFIG="configs/${OPTARG}"
+              if [ ! -d "$CONFIG" ] && [ ! -f "$CONFIG" ]
+              then
+                  echo "config provided in -c flag (${CONFIG#configs/}) is not a valid directory or file"
+                  exit 1
+              fi
+              ;;
+          n)
+              N_BATCHES=${OPTARG}
+              ;;
+          ?)
+            echo "script usage: $(basename \$0) [-m] [-c] [-p] [-r] [-g] [-d]" >&2
+            exit 1
             ;;
-        r)
-            echo "Setting root for bash"
-            ROOT='-u root'
-            ;;
-        g)
-            echo "Setting gpus access"
-            GPU='--gpus all -ti'
-            ;;
-        d)
-            echo "Registering container detachment"
-            DETACH='-d'
-            ;;
-        n)
-            N_BATCHES=${OPTARG}
-            ;;
-        ?)
-          echo "script usage: $(basename \$0) [-m] [-c] [-p] [-r] [-g] [-d]" >&2
-          exit 1
-          ;;
-    esac
-done
+      esac
+  done
 
-if [[ $MODE == "" ]]
-then
-    echo "Please specify a mode using the flag -m, valid modes: train, test, predict, plotting, bash"
-    exit 1
-fi
+  if [[ $MODE == "" ]]
+  then
+      echo "Please specify a mode using the flag -m, valid modes: train, test, predict, plotting, bash"
+      exit 1
+  fi
 
-if [[ $CONFIG == "" && $MODE != "bash" ]]
-then
-    echo "Config file not provided. please provide a file from the config folder"
-    exit 1
-fi
+  if [[ $CONFIG == "" && $MODE != "bash" ]]
+  then
+      echo "Config file not provided. please provide a file from the config folder"
+      exit 1
+  fi
 
-. ./common.sh
-IMAGE_ID=$(docker images -q $IMAGE_FULL)
+  IMAGE_NAME=../autoxai4omics.sif
+  cd src
 
-if [[ -z $IMAGE_ID ]]
-then 
-    echo "Image not built, please build by running './build.sh' "
-    exit 1
-fi
+  if [ $MODE != "bash" ]
+  then
+      if [ -d "$CONFIG" ]
+      then
+          echo "Entering batch mode..."
+          N_BATCHES=${N_BATCHES:-5}
 
-if [ $MODE != "bash" ]
-then
-    if [ -d "$CONFIG" ]
-    then
-        echo "Entering batch mode..."
-        N_BATCHES=${N_BATCHES:-5}
-
-        for FILE in $(find $CONFIG -name "*.json" | sort )
-        do
-            (
-                echo "Runing config file: $FILE"
-                # ((i=i%N_BATCHES)); ((i++==0)) && wait
-                docker run \
-                  --rm \
-                  $DETACH \
-                  $GPU \
-                  $VOL_MAPS \
-                  $IMAGE_FULL \
-                  python $MODE -c /"$FILE"
-            ) &
-            if [[ $(jobs -r -p | wc -l) -ge $N_BATCHES ]]; then
-                # now there are $N jobs already running, so wait here for any job
-                # to be finished so there is a place to start next one.
-                wait -n
-            fi
-        done
-        wait
-    else
-        docker run \
-          --rm \
-          $DETACH \
-          $GPU \
-          $VOL_MAPS \
-          $IMAGE_FULL \
-          python $MODE -c /"$CONFIG"
-    fi
-else
-    docker run \
-      --rm \
-      -ti \
-      $ROOT \
-      $VOL_MAPS \
-      $IMAGE_FULL \
-      bash
+          for FILE in $(find $CONFIG -name "*.json" | sort )
+          do
+              (
+                  echo "Running config file: $FILE"
+                  # ((i=i%N_BATCHES)); ((i++==0)) && wait
+                  apptainer exec -f --env PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python \
+                            $VOL_MAPS \
+                            $IMAGE_NAME \
+                            python $MODE -c /"$FILE"
+              ) &
+              if [[ $(jobs -r -p | wc -l) -ge $N_BATCHES ]]; then
+                  # now there are $N jobs already running, so wait here for any job
+                  # to be finished so there is a place to start next one.
+                  wait -n
+              fi
+          done
+          wait
+      else
+          apptainer exec -f --env PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python \
+                    $VOL_MAPS \
+                    $IMAGE_NAME \
+                    python $MODE -c /"$CONFIG"
+      fi
+  else
+      apptainer exec -f --env PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python \
+                    $VOL_MAPS \
+                    $IMAGE_NAME \
+                    bash
+  fi
 fi
