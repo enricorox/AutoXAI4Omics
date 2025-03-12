@@ -1,0 +1,32 @@
+BootStrap: docker
+From: python:3.9.18
+
+%files
+        src /home/omicsuser
+        requirements.txt .
+
+%post
+        apt-get update && apt-get upgrade -y && apt-get clean
+        apt-get install -y software-properties-common git
+
+        python -m pip install --upgrade pip setuptools
+
+        pip install -r requirements.txt
+
+        useradd -l -m -s /bin/bash --uid 1001 -g 0 omicsuser
+        chown -R omicsuser:0 /home/omicsuser
+
+%environment
+        TF_CPP_MIN_LOG_LEVEL=2
+        PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+
+%runscript
+        #!/bin/bash
+        exec su -l omicsuser -c "$@"
+
+%labels
+        Author enricorox
+
+%help
+        AutoXAI4Omics (https://github.com/IBM/AutoXAI4Omics)
+        EXPERIMENTAL
