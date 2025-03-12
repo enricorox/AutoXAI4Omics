@@ -236,6 +236,7 @@ else ### use apptainer ###
                   echo "Running config file: $FILE"
                   # ((i=i%N_BATCHES)); ((i++==0)) && wait
                   apptainer exec -f --env PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python \
+                            --writable-tmpfs --pwd /home/omicsuser \
                             $VOL_MAPS \
                             $IMAGE_NAME \
                             python $MODE -c /"$FILE"
@@ -249,12 +250,14 @@ else ### use apptainer ###
           wait
       else
           apptainer exec -f --env PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python \
+                    --writable-tmpfs --pwd /home/omicsuser \
                     $VOL_MAPS \
                     $IMAGE_NAME \
                     python $MODE -c /"$CONFIG"
       fi
   else
       apptainer exec -f --env PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python \
+                    --writable-tmpfs --pwd /home/omicsuser \
                     $VOL_MAPS \
                     $IMAGE_NAME \
                     bash
