@@ -16,5 +16,5 @@ set -e
 cd ..
 
 echo "### TRAINING ###"
-srun ./autoxai4omics.sh -c active80.json -m train
+srun ./autoxai4omics.sh -c active80_rerun.json -m train
 
