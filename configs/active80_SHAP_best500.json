@@ -1,0 +1,87 @@
+{
+    "data": {
+        "name": "80Active_SHAP_100best",
+        "file_path": "/data/features-active80_data.csv",
+        "metadata_file": "/data/mortality_features-active80_metadata.csv",
+        "save_path": "/experiments/",
+        "target": "mortality",
+        "data_type": "tabular"
+    },
+    "ml": {
+        "seed_num": 42,
+        "test_size": 0.2,
+        "problem_type": "classification",
+        "hyper_tuning": "random",
+        "hyper_budget": 50,
+        "stratify_by_groups": "N",
+        "groups": "",
+        "balancing": "NONE",
+        "fit_scorer": "f1_score",
+        "scorer_list": [
+            "accuracy_score",
+            "f1_score"
+        ],
+        "model_list": [
+            "RandomForestClassifier",
+            "AdaBoostClassifier",
+            "KNeighborsClassifier",
+            "AutoXGBoost",
+            "AutoLGBM",
+            "AutoKeras"
+        ],
+        "autokeras_config": {
+            "n_epochs": 100,
+            "batch_size": 32,
+            "verbose": true,
+            "n_blocks": 3,
+            "dropout": 0.3,
+            "use_batchnorm": true,
+            "n_trials": 4,
+            "tuner": "bayesian"
+        },
+        "autolgbm_config": {
+            "verbose": true,
+            "n_trials": 5,
+            "timeout": 60
+        },
+        "autoxgboost_config": {
+            "verbose": true,
+            "n_trials": 10,
+            "timeout": 500
+        },
+        "feature_selection": {
+            "k": 1000,
+            "var_threshold": 0,
+            "auto": {
+                "min_features": 10,
+                "interval": 1,
+                "eval_model": "RandomForestClassifier",
+                "eval_metric": "f1_score"
+            },
+            "method": {
+                "name": "SelectKBest",
+                "metric": "f_classif"
+            }
+        },
+        "encoding": null
+    },
+    "plotting": {
+        "plot_method": [
+            "barplot_scorer",
+            "boxplot_scorer",
+            "conf_matrix",
+            "shap_plots",
+            "roc_curve"
+        ],
+        "top_feats_permImp": 500,
+        "top_feats_shap": 500,
+        "explanations_data": "all"
+    },
+    "tabular": {
+        "filter_tabular_sample": 1000000,
+        "filter_tabular_measurements": [
+            0,
+            1
+        ]
+    }
+}
