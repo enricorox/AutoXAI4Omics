@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#SBATCH --job-name xai-active80
-#SBATCH --output logs/xai-active80.log
-#SBATCH --error logs/xai-active80.log
+#SBATCH --job-name xai-active80-seed
+#SBATCH --output logs/xai-active80-seed.log
+#SBATCH --error logs/xai-active80-seed.log
 #SBATCH --mail-user enrico.rossignolo@studenti.unipd.it
 #SBATCH --mail-type ALL
 #SBATCH --time 14-00:00:00
