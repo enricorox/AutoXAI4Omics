@@ -1,6 +1,6 @@
 {
     "data": {
-        "name": "80Active_SHAP_seed",
+        "name": "80Active_SHAP_500best_seed",
         "file_path": "/data/features-active80_data.csv",
         "metadata_file": "/data/mortality_features-active80_metadata.csv",
         "save_path": "/experiments/",

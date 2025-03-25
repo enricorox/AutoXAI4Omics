@@ -16,5 +16,5 @@ set -e
 cd ..
 
 echo "### TRAINING ###"
-srun ./autoxai4omics.sh -c 80active_SHAP_best500.json -m train
+srun ./autoxai4omics.sh -c 80active_SHAP_best500_seed.json -m train
 
