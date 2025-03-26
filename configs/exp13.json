@@ -48,8 +48,8 @@
             "roc_curve",
             "shap_plots"
         ],
-        "top_feats_permImp": 1000,
-        "top_feats_shap": 1000,
+        "top_feats_permImp": 500,
+        "top_feats_shap": 500,
         "explanations_data": "all"
     },
     "tabular": {
