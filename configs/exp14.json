@@ -1,0 +1,72 @@
+{
+    "data": {
+        "name": "exp14",
+        "file_path": "/data/features-ensemble_data.csv",
+        "metadata_file": "/data/features_metadata.csv",
+        "save_path": "/experiments/",
+        "target": "mortality",
+        "data_type": "tabular"
+    },
+    "ml": {
+        "seed_num": 42,
+        "test_size": 0.2,
+        "problem_type": "classification",
+        "hyper_tuning": "random",
+        "hyper_budget": 50,
+        "stratify_by_groups": "N",
+        "groups": "",
+        "balancing": "NONE",
+        "fit_scorer": "f1_score",
+        "scorer_list": [
+            "accuracy_score",
+            "f1_score"
+        ],
+        "model_list": [
+            "AutoKeras"
+        ],
+        "autokeras_config": {
+            "n_epochs": 100,
+            "batch_size": 32,
+            "verbose": true,
+            "n_blocks": 3,
+            "dropout": 0.3,
+            "use_batchnorm": true,
+            "n_trials": 4,
+            "tuner": "bayesian"
+        },
+        "feature_selection": {
+            "k": 1000,
+            "var_threshold": 0,
+            "auto": {
+                "min_features": 10,
+                "interval": 1,
+                "eval_model": "RandomForestClassifier",
+                "eval_metric": "f1_score"
+            },
+            "method": {
+                "name": "SelectKBest",
+                "metric": "f_classif"
+            }
+        },
+        "encoding": null
+    },
+    "plotting": {
+        "plot_method": [
+            "barplot_scorer",
+            "boxplot_scorer",
+            "conf_matrix",
+            "shap_plots",
+            "roc_curve"
+        ],
+        "top_feats_permImp": 15,
+        "top_feats_shap": 15,
+        "explanations_data": "all"
+    },
+    "tabular": {
+        "filter_tabular_sample": 1000000,
+        "filter_tabular_measurements": [
+            0,
+            1
+        ]
+    }
+}
