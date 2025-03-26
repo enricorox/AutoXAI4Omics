@@ -9,7 +9,7 @@
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task=16
 #SBATCH --partition allgroups
-#SBATCH --mem 20G
+#SBATCH --mem 200G
 
 set -e
 
