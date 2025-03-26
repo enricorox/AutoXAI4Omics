@@ -1,12 +1,11 @@
 import sys
-from collections import Counter
 import matplotlib.pyplot as plt
 
 
 def read_features(csv_file):
     features = []
     with open(csv_file) as csv:
-        next(csv) # skip header
+        next(csv)  # skip header
         for line in csv:
             line = line.split(sep=",")
             features.append(line[1])
@@ -30,8 +29,8 @@ def compute_stats(features):
 
 def plot_stat(x_vals, y_vals, png_out='chromosomes_stat.png', csv_out=None):
     plt.bar(x_vals, y_vals, color='skyblue', edgecolor='black')
-    plt.title('Value Distribution (Sorted)')
-    plt.xlabel('Value')
+    plt.title('Chromosomes Distribution')
+    plt.xlabel('Chromosomes')
     plt.ylabel('Frequency')
     plt.xticks(x_vals)
     plt.savefig(png_out)
