@@ -55,7 +55,8 @@
             "barplot_scorer",
             "boxplot_scorer",
             "conf_matrix",
-            "roc_curve"
+            "roc_curve",
+            "shap_plots"
         ],
         "top_feats_permImp": 15,
         "top_feats_shap": 15,
