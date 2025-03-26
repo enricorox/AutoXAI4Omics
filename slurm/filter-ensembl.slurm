@@ -15,6 +15,6 @@ set -e
 
 cd /nfsd/bcb/bcbg/rossigno/PNRR/AutoXAI4Omics/data
 
-srun grep -f filter-ensembl.txt /nfsd/bcb/bcbg/EleonoraSignor/AutoXAI4Omics/data/features_data.csv > filtered.csv
+srun grep -F -f filter-ensembl.txt /nfsd/bcb/bcbg/EleonoraSignor/AutoXAI4Omics/data/features_data.csv > filtered.csv
 
 srun cat header.csv filtered.csv > features_data_ensembl.csv
